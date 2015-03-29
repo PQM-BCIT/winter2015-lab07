@@ -47,9 +47,14 @@ class Welcome extends Application {
     function order($filename)
     {
         // Build a receipt for the chosen order
+        $order = new Order();
+        $order->setXml($filename);
 
         // Present the list to choose from
         $this->data['pagebody'] = 'justone';
+        $this->data['order_name'] = $order->getName();
+        $this->data['burgers'] = $order->getBurgers();
+        $this->data['price'] = number_format($order->getTotal(), 2);
         $this->render();
     }
 
