@@ -27,6 +27,7 @@ class Order extends MY_Model {
     $burgers = array();
     foreach ($this->xml->burger as $burger) {
       $food = new stdClass;
+      $food->num = sizeof($burgers) + 1;
       $food->patty = $this->getItem($burger, 'patty');
       $food->cheeses = is_null($this->getItem($burger, 'cheeses')) ? "None" : $this->getItem($burger, 'cheeses');
       $food->sauces = is_null($this->getItem($burger, 'sauce')) ? "None" : $this->getItem($burger, 'sauce');
