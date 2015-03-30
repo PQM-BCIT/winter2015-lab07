@@ -5,10 +5,11 @@ class Order extends MY_Model {
   private $menu = null;
   protected $xml = null;
   protected $total = 0.00;
+  protected $burgers = array();
 
   public function __construct() {
     parent::__construct();
-    $this->xml = simplexml_load_file(DATAPATH . 'menu.xml');
+    $this->menu = new Menu();
   }
 
   public function setXml($filename) {
@@ -24,18 +25,17 @@ class Order extends MY_Model {
   }
 
   public function getBurgers() {
-    $burgers = array();
     foreach ($this->xml->burger as $burger) {
       $food = new stdClass;
-      $food->num = sizeof($burgers) + 1;
+      $food->num = sizeof($this->burgers) + 1;
       $food->patty = $this->getItem($burger, 'patty');
       $food->cheeses = is_null($this->getItem($burger, 'cheeses')) ? "None" : $this->getItem($burger, 'cheeses');
       $food->sauces = is_null($this->getItem($burger, 'sauce')) ? "None" : $this->getItem($burger, 'sauce');
       $food->toppings = is_null($this->getItem($burger, 'topping')) ? "None" : $this->getItem($burger, 'topping');
-      $burgers[] = $food;
+      $this->burgers[] = $food;
     }
 
-    return $burgers;
+    return $this->burgers;
   }
 
   private function getItem($burger, $category) {
@@ -46,24 +46,21 @@ class Order extends MY_Model {
 
       foreach ($item as $key => $value) {
         if (isset($value['type'])) {
-          $items[] = $value['type'];
+          $items[] = $this->menu->getDetail($key, $value['type'], 'name');
+          $this->total += $this->menu->getDetail($key, $value['type'], 'price');
         }
         if (isset($value['top'])) {
-          $items[] = $value['top'] . " (top)";
+          $items[] = $this->menu->getDetail($key, $value['top'], 'name') . " (top)";
+          $this->total += $this->menu->getDetail($key, $value['top'], 'price');
         }
         if (isset($value['bottom'])) {
-          $items[] = $value['bottom'] . " (bottom)";
+          $items[] = $this->menu->getDetail($key, $value['bottom'], 'name') . " (bottom)";
+          $this->total += $this->menu->getDetail($key, $value['bottom'], 'price');
         }
       }
 
       return implode(', ', $items);
     }
-  }
-
-  private function getPatty($burger) {
-    $patty = $burger->patty['type'];
-
-    return $patty;
   }
 
 }

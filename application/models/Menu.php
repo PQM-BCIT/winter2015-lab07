@@ -9,40 +9,66 @@
 class Menu extends CI_Model {
 
     protected $xml = null;
-    protected $patty_names = array();
-    protected $patties = array();
+    protected $menu = array();
 
     // Constructor
     public function __construct() {
         parent::__construct();
         $this->xml = simplexml_load_file(DATAPATH . 'menu.xml');
 
-        // build the list of patties - approach 1
-        foreach ($this->xml->patties->patty as $patty) {
-            $patty_names[(string) $patty['code']] = (string) $patty;
-        }
+        $this->buildList('patties');
+        $this->buildList('cheeses');
+        $this->buildList('toppings');
+        $this->buildList('sauces');
+    }
 
-        // build a full list of patties - approach 2
-        foreach ($this->$xml->patties->patty as $patty) {
+    private function getLookup($category) {
+        switch ($category) {
+            case 'patties':
+                return 'patty';
+            case 'cheeses':
+                return 'cheese';
+            case 'toppings':
+                return 'topping';
+            case 'sauces':
+                return 'sauce';
+            default:
+                return null;
+        }
+    }
+
+    private function getKey($lookup) {
+        switch ($lookup) {
+            case 'patty':
+                return 'patties';
+            case 'topping':
+                return 'toppings';
+            case 'sauce':
+                return 'sauces';
+            case 'cheese':
+                return 'cheeses';
+            default:
+                return $lookup;
+        }
+    }
+
+    private function buildList($category) {
+        $lookup = $this->getLookup($category);
+        foreach ($this->xml->$category->$lookup as $item) {
             $record = new stdClass();
-            $record->code = (string) $patty['code'];
-            $record->name = (string) $patty;
-            $record->price = (float) $patty['price'];
-            $patties[$record->code] = $record;
+            $record->code = (string) $item['code'];
+            $record->name = (string) $item;
+            $record->price = (float) $item['price'];
+            $this->menu[$category][$record->code] = $record;
         }
+
     }
 
-    // retrieve a list of patties, to populate a dropdown, for instance
-    function patties() {
-        return $this->patty_names;
-    }
+    public function getDetail($lookup, $code, $name) {
+        $key = $this->getKey($lookup);
+        $category_menu = $this->menu[$key];
 
-    // retrieve a patty record, perhaps for pricing
-    function getPatty($code) {
-        if (isset($this->patties[$code]))
-            return $this->patties[$code];
-        else
-            return null;
+        return $category_menu[(string) $code]->$name;
     }
 
 }
